@@ -7,8 +7,9 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "axios": "^0.21.1"
+    "express": "^4.17.1",  // Latest stable version of express
+    "axios": "^0.21.1",    // Consider updating to a newer version if needed
+    "crypto-js": "^4.1.1"  // Added the crypto-js library to handle AES decryption
   },
   "author": "",
   "license": "ISC"
