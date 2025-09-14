@@ -38,8 +38,14 @@ new Chart(document.getElementById('tempChart'), {
         responsive: true,
         plugins: { legend: { display: true } },
         scales: {
-            x: { ticks: { maxRotation: 90, minRotation: 45, autoSkip: true } },
-            y: { beginAtZero: false }
+            x: { 
+                ticks: { maxRotation: 90, minRotation: 45, autoSkip: true } 
+            },
+            y: { 
+                min: 0,   // bắt đầu từ 0
+                max: 50,  // tối đa 50
+                beginAtZero: true 
+            }
         }
     }
 });
