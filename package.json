@@ -14,11 +14,11 @@
     "express": "^4.17.1"
   },
   "engines": {
-    "node": "14.x"  // Chọn đúng version Node.js mà Render hỗ trợ
+    "node": "14.x"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nguyenvanson04052002-bit/honuoica.git"  // Chỉ rõ repository của bạn
+    "url": "https://github.com/nguyenvanson04052002-bit/honuoica.git"
   },
   "keywords": [
     "proxy",
