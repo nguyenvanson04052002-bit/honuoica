@@ -1,19 +1,16 @@
 {
-  "name": "esp8266-proxy",
+  "name": "proxy-server",
   "version": "1.0.0",
-  "description": "Proxy server cho ESP8266 để lấy và gửi dữ liệu từ/đến server PHP",
+  "description": "Proxy server to interact with PHP server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^1.2.0",
-    "express": "^4.18.1",
-    "body-parser": "^1.20.0"
+    "axios": "^0.27.2",
+    "express": "^4.17.1"
   },
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "author": "",
-  "license": "ISC"
+    "node": "16.x"
+  }
 }
