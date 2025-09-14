@@ -17,39 +17,6 @@ th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
 
 <h2>📊 Biểu đồ nhiệt độ</h2>
 <canvas id="tempChart" height="180"></canvas>
-<script>
-const labels = <%- JSON.stringify(data.slice(-20).map(d => d.time)) %>;
-const temps  = <%- JSON.stringify(data.slice(-20).map(d => d.temp)) %>;
-
-new Chart(document.getElementById('tempChart'), {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'Nhiệt độ (°C)',
-            data: temps,
-            borderColor: 'red',
-            fill: false,
-            tension: 0.1,
-            pointRadius: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: true } },
-        scales: {
-            x: { 
-                ticks: { maxRotation: 90, minRotation: 45, autoSkip: true } 
-            },
-            y: { 
-                min: 0,   // bắt đầu từ 0
-                max: 50,  // tối đa 50
-                beginAtZero: true 
-            }
-        }
-    }
-});
-</script>
 
 <h3>🎯 Điều chỉnh nhiệt độ</h3>
 <form method="POST" action="/dashboard.php">
@@ -80,7 +47,7 @@ new Chart(document.getElementById('tempChart'), {
 </form>
 
 <h3>📋 Lịch sử hoạt động</h3>
-<table>
+<table id="activityTable">
 <tr><th>Thời gian</th><th>Nhiệt độ</th><th>Trạng thái</th></tr>
 <% data.slice().reverse().forEach(row => { %>
 <tr>
@@ -94,6 +61,87 @@ new Chart(document.getElementById('tempChart'), {
 <% if (popup) { %>
 <div id="popup">🔔 <%= popup %></div>
 <% } %>
+
+<script>
+// ====== Khởi tạo chart ban đầu ======
+const ctx = document.getElementById('tempChart').getContext('2d');
+let labels = <%- JSON.stringify(data.slice(-20).map(d => d.time)) %>;
+let temps  = <%- JSON.stringify(data.slice(-20).map(d => d.temp)) %>;
+
+const tempChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Nhiệt độ (°C)',
+            data: temps,
+            borderColor: 'red',
+            fill: false,
+            tension: 0.1,
+            pointRadius: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: true } },
+        scales: {
+            x: { ticks: { maxRotation: 90, minRotation: 45, autoSkip: true } },
+            y: { min: 0, max: 50, beginAtZero: true }
+        }
+    }
+});
+
+// ====== Hàm cập nhật chart từ API ======
+async function updateChart() {
+    try {
+        const res = await fetch('/api/data/latest');
+        const json = await res.json();
+        if (Array.isArray(json)) {
+            const newLabels = json.map(d => d.time);
+            const newTemps  = json.map(d => d.temp);
+            tempChart.data.labels = newLabels;
+            tempChart.data.datasets[0].data = newTemps;
+            tempChart.update();
+
+            // Cập nhật bảng lịch sử hoạt động
+            const tbody = document.getElementById("activityTable");
+            tbody.innerHTML = "<tr><th>Thời gian</th><th>Nhiệt độ</th><th>Trạng thái</th></tr>";
+            json.slice().reverse().forEach(row => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${row.time}</td><td>${row.temp}</td><td>${row.status}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (e) {
+        console.error("Lỗi cập nhật biểu đồ:", e);
+    }
+}
+
+// ====== Hàm cập nhật popup ======
+async function updatePopup() {
+    try {
+        const res = await fetch('/api/status/latest');
+        const json = await res.json();
+        if (json && json.status) {
+            let popupEl = document.getElementById("popup");
+            if (!popupEl) {
+                popupEl = document.createElement("div");
+                popupEl.id = "popup";
+                document.body.appendChild(popupEl);
+            }
+            popupEl.textContent = `🔔 ${json.status} lúc ${json.time}`;
+        }
+    } catch (e) {
+        console.error("Lỗi cập nhật popup:", e);
+    }
+}
+
+// ====== Tự động refresh mỗi 5 giây ======
+setInterval(() => {
+    updateChart();
+    updatePopup();
+}, 5000);
+</script>
 
 </body>
 </html>
