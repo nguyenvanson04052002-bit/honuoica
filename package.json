@@ -1,29 +1,35 @@
 {
   "name": "honuoica-proxy",
   "version": "1.0.0",
-  "description": "A simple proxy server to fetch data from a web server with JavaScript (for ESP8266)",
+  "description": "Proxy server for scraping data and serving to ESP8266",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "axios": "^0.27.2",
-    "cheerio": "^1.0.0-rc.12",
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.5",
+    "cors": "^2.8.5",
     "express": "^4.17.1"
   },
   "engines": {
-    "node": "16.x"
+    "node": "14.x"  // Chọn đúng version Node.js mà Render hỗ trợ
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/honuica-proxy.git"
+    "url": "https://github.com/nguyenvanson04052002-bit/honuoica.git"  // Chỉ rõ repository của bạn
   },
   "keywords": [
     "proxy",
-    "node.js",
-    "esp8266",
-    "web scraping"
+    "express",
+    "axios",
+    "cheerio"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "author": "Nguyen Van Son",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nguyenvanson04052002-bit/honuoica/issues"
+  },
+  "homepage": "https://github.com/nguyenvanson04052002-bit/honuoica#readme"
 }
