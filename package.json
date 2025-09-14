@@ -1,14 +1,13 @@
 {
-  "name": "esp8266-proxy",
+  "name": "fish-dashboard",
   "version": "1.0.0",
-  "description": "Proxy cho ESP8266 gửi dữ liệu tới InfinityFree",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "node-fetch": "^3.3.2"
+    "body-parser": "^1.20.2",
+    "ejs": "^3.1.9"
   }
 }
