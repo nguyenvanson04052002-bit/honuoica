@@ -1,16 +1,16 @@
 {
   "name": "my-nodejs-project",
   "version": "1.0.0",
-  "description": "Node.js Proxy API Server",
+  "description": "Node.js Proxy API Server with AES decryption",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "axios": "^0.21.1"
+    "axios": "^0.21.1",
+    "crypto-js": "^3.3.0"
   },
   "author": "",
   "license": "ISC"
 }
-
