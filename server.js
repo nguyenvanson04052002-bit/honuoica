@@ -30,7 +30,7 @@ const MIN_FILE = "min_temp.txt";
 const MAX_FILE = "max_temp.txt";
 const FEED_FILE = "feed_schedule.txt";
 
-const validStatuses = ["COOL_ON", "HEAT_ON", "OFF"];
+const validStatuses = ["COOL_ON", "HEAT_ON", "STABLE"];
 
 // ===== HÀM LẤY GIỜ VIỆT NAM =====
 function getVietnamTime() {
