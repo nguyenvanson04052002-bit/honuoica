@@ -1,15 +1,16 @@
 {
-  "name": "my-nodejs-project",
+  "name": "aes-proxy-server",
   "version": "1.0.0",
-  "description": "Node.js Proxy API Server with AES decryption",
+  "description": "Proxy server to decrypt AES data for ESP8266",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "axios": "^0.21.1",
-    "crypto-js": "^3.3.0"
+    "axios": "^0.24.0",
+    "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
+    "express": "^4.17.1"
   },
   "author": "",
   "license": "ISC"
