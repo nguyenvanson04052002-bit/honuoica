@@ -17,7 +17,7 @@ app.get('/proxy', async (req, res) => {
     }
 
     // Thực hiện yêu cầu HTTP đến server gốc
-    const response = await axios.get(https://nuoicatudong.gt.tc/dashboard.php?mode=get);
+    const response = await axios.get(https://nuoicatudong.gt.tc/dashboard.php);
     
     // Kiểm tra dữ liệu trả về từ server gốc
     if (!response.data) {
