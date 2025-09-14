@@ -2,136 +2,91 @@ const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
 const path = require("path");
+const session = require("express-session");
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public")); // cho css/js
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-const DATA_FILE = "data.csv";
-const CONFIG_HISTORY = "config_history.csv";
-const LAST_STATUS = "last_status.txt";
-const TARGET_FILE = "target.txt";
-const MIN_FILE = "min_temp.txt";
-const MAX_FILE = "max_temp.txt";
-const FEED_FILE = "feed_schedule.txt";
+// session để giữ trạng thái đăng nhập
+app.use(
+  session({
+    secret: "supersecret", // đổi khi deploy
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
-const validStatuses = ["COOL_ON", "HEAT_ON", "OFF"];
+const USERS_FILE = "users.txt";
 
-// ===== 1. ESP gửi dữ liệu cập nhật =====
-app.get("/dashboard.php", (req, res) => {
-  const mode = req.query.mode;
+// ===== LOGIN PAGE =====
+app.get("/", (req, res) => {
+  if (req.session.user) return res.redirect("/dashboard.php");
+  res.render("login", { error: null });
+});
 
-  if (mode === "update") {
-    res.setHeader("Content-Type", "text/plain");
-
-    const temp = parseFloat(req.query.temp);
-    const status = req.query.status ? req.query.status.trim() : "UNKNOWN";
-    const time = new Date().toISOString().replace("T", " ").split(".")[0];
-
-    if (!validStatuses.includes(status)) {
-      res.status(400).send("ERROR: Invalid status");
-      return;
-    }
-
-    if (!isNaN(temp)) {
-      fs.appendFileSync(DATA_FILE, `${time},${temp},${status}\n`);
-      fs.appendFileSync(LAST_STATUS, `${status}|${time}\n`);
-      res.send("OK\n");
-    } else {
-      res.status(400).send("ERROR: Invalid temperature\n");
-    }
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  if (!fs.existsSync(USERS_FILE)) {
+    return res.render("login", { error: "Chưa có tài khoản nào!" });
   }
 
-  // ===== 2. ESP lấy cấu hình nhiệt độ =====
-  else if (mode === "get") {
-    res.setHeader("Content-Type", "text/plain");
+  const users = fs
+    .readFileSync(USERS_FILE, "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.split("|"));
 
-    const target = fs.existsSync(TARGET_FILE) ? fs.readFileSync(TARGET_FILE, "utf8").trim() : "25.0";
-    const min = fs.existsSync(MIN_FILE) ? fs.readFileSync(MIN_FILE, "utf8").trim() : "23.0";
-    const max = fs.existsSync(MAX_FILE) ? fs.readFileSync(MAX_FILE, "utf8").trim() : "27.0";
+  const found = users.find(
+    ([u, p]) => u === username.trim() && p === password.trim()
+  );
 
-    res.send(`TARGET:${target}\nMIN:${min}\nMAX:${max}`);
-  }
-
-  // ===== 3. ESP lấy lịch cho ăn =====
-  else if (mode === "feedcheck") {
-    res.setHeader("Content-Type", "text/plain");
-    const feed = fs.existsSync(FEED_FILE) ? fs.readFileSync(FEED_FILE, "utf8").trim() : "";
-    res.send(feed);
-  }
-
-  // ===== 4. Dashboard web =====
-  else {
-    // Đọc dữ liệu lịch sử
-    let data = [];
-    if (fs.existsSync(DATA_FILE)) {
-      const rows = fs.readFileSync(DATA_FILE, "utf8").split("\n").filter(Boolean);
-      data = rows.map(r => {
-        const [time, temp, status] = r.split(",");
-        return { time, temp: parseFloat(temp), status };
-      });
-    }
-
-    // Popup trạng thái
-    let popup = "";
-    if (fs.existsSync(LAST_STATUS)) {
-      const lines = fs.readFileSync(LAST_STATUS, "utf8").split("\n").filter(Boolean);
-      if (lines.length > 0) {
-        const lastLine = lines[lines.length - 1];
-        const [popupStatus, popupTime] = lastLine.split("|");
-        popup = `${popupStatus} lúc ${popupTime}`;
-      }
-    }
-
-    const targetNow = fs.existsSync(TARGET_FILE) ? fs.readFileSync(TARGET_FILE, "utf8").trim() : "25.0";
-    const minNow = fs.existsSync(MIN_FILE) ? fs.readFileSync(MIN_FILE, "utf8").trim() : "23.0";
-    const maxNow = fs.existsSync(MAX_FILE) ? fs.readFileSync(MAX_FILE, "utf8").trim() : "27.0";
-    const feedNow = fs.existsSync(FEED_FILE) ? fs.readFileSync(FEED_FILE, "utf8").trim() : "";
-
-    let history = [];
-    if (fs.existsSync(CONFIG_HISTORY)) {
-      const lines = fs.readFileSync(CONFIG_HISTORY, "utf8").split("\n").filter(Boolean).reverse();
-      history = lines.map(l => {
-        const [time, target, min, max] = l.split(",");
-        return { time, target, min, max };
-      });
-    }
-
-    res.render("dashboard", { data, popup, targetNow, minNow, maxNow, feedNow, history });
+  if (found) {
+    req.session.user = username;
+    res.redirect("/dashboard.php");
+  } else {
+    res.render("login", { error: "Sai tài khoản hoặc mật khẩu" });
   }
 });
 
-// ===== 5. POST: cập nhật config =====
-app.post("/dashboard.php", (req, res) => {
-  const { targetTemp, minTemp, maxTemp, feedTime } = req.body;
-
-  if (targetTemp && minTemp && maxTemp) {
-    const t = parseFloat(targetTemp);
-    const min = parseFloat(minTemp);
-    const max = parseFloat(maxTemp);
-
-    if (t < min || t > max) {
-      return res.send("<p style='color:red'>⚠️ Mục tiêu phải nằm trong khoảng Min và Max.</p>");
-    }
-
-    const time = new Date().toISOString().replace("T", " ").split(".")[0];
-    fs.writeFileSync(TARGET_FILE, t.toString());
-    fs.writeFileSync(MIN_FILE, min.toString());
-    fs.writeFileSync(MAX_FILE, max.toString());
-    fs.appendFileSync(CONFIG_HISTORY, `${time},${t},${min},${max}\n`);
-  }
-
-  if (feedTime) {
-    if (/^(\d{2}:\d{2})(,\d{2}:\d{2})*$/.test(feedTime)) {
-      fs.writeFileSync(FEED_FILE, feedTime);
-    } else {
-      return res.send("<p style='color:red'>⚠️ Định dạng giờ không hợp lệ. VD: 09:00,21:00</p>");
-    }
-  }
-
-  res.redirect("/dashboard.php");
+// ===== REGISTER PAGE =====
+app.get("/register", (req, res) => {
+  res.render("register", { error: null });
 });
+
+app.post("/register", (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.render("register", { error: "Vui lòng nhập đủ thông tin!" });
+  }
+
+  const line = `${username.trim()}|${password.trim()}\n`;
+  fs.appendFileSync(USERS_FILE, line);
+  res.send(
+    "<script>alert('Đăng ký thành công!'); window.location.href='/'</script>"
+  );
+});
+
+// ===== LOGOUT =====
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/"));
+});
+
+/* ==== ĐOẠN DASHBOARD CŨ ==== 
+   Toàn bộ code xử lý /dashboard.php 
+   mà mình đã viết ở trên bạn giữ nguyên
+   (chỉ cần thêm kiểm tra đăng nhập).
+*/
+
+app.get("/dashboard.php", (req, res, next) => {
+  if (!req.session.user) return res.redirect("/");
+  next();
+});
+
+// >>> sau dòng trên bạn đặt nguyên code dashboard cũ <<<
+
 
 // ====== PORT ======
 const PORT = process.env.PORT || 3000;
