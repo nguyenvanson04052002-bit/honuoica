@@ -13,9 +13,11 @@
       <input type="password" name="password" placeholder="Mật khẩu" required>
       <button type="submit">Đăng ký</button>
     </form>
+
     <a href="/" class="register-link">Đã có tài khoản? Đăng nhập</a>
+
     <% if (error) { %>
-      <p style="color: red; margin-top: 10px;"><%= error %></p>
+      <div class="error-message"><%= error %></div>
     <% } %>
   </div>
 </body>
