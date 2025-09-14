@@ -5,12 +5,13 @@ const path = require("path");
 const session = require("express-session");
 
 const app = express();
+
+// ====== MIDDLEWARE ======
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public")); // cho CSS/JS
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// session để giữ trạng thái đăng nhập
 app.use(
   session({
     secret: "supersecret", // đổi khi deploy
@@ -19,7 +20,7 @@ app.use(
   })
 );
 
-// ==== FILES ====
+// ====== FILES ======
 const USERS_FILE = "users.txt";
 const DATA_FILE = "data.csv";
 const CONFIG_HISTORY = "config_history.csv";
@@ -28,9 +29,10 @@ const TARGET_FILE = "target.txt";
 const MIN_FILE = "min_temp.txt";
 const MAX_FILE = "max_temp.txt";
 const FEED_FILE = "feed_schedule.txt";
+
 const validStatuses = ["COOL_ON", "HEAT_ON", "OFF"];
 
-// ===== LOGIN PAGE =====
+// ===== LOGIN =====
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard.php");
   res.render("login", { error: null });
@@ -39,7 +41,7 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (!fs.existsSync(USERS_FILE)) {
-    return res.render("login", { error: "Chưa có tài khoản nào!" });
+    return res.render("login", { error: "⚠️ Chưa có tài khoản nào!" });
   }
 
   const users = fs
@@ -56,11 +58,11 @@ app.post("/login", (req, res) => {
     req.session.user = username;
     res.redirect("/dashboard.php");
   } else {
-    res.render("login", { error: "Sai tài khoản hoặc mật khẩu" });
+    res.render("login", { error: "⚠️ Sai tài khoản hoặc mật khẩu" });
   }
 });
 
-// ===== REGISTER PAGE =====
+// ===== REGISTER =====
 app.get("/register", (req, res) => {
   res.render("register", { error: null });
 });
@@ -69,30 +71,27 @@ app.post("/register", (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.render("register", { error: "Vui lòng nhập đủ thông tin!" });
+    return res.render("register", { error: "⚠️ Vui lòng nhập đủ thông tin!" });
   }
 
-  // Đọc danh sách user hiện có
   let users = [];
   if (fs.existsSync(USERS_FILE)) {
     users = fs
       .readFileSync(USERS_FILE, "utf8")
       .split("\n")
       .filter(Boolean)
-      .map((line) => line.split("|")[0]); // chỉ lấy username
+      .map((line) => line.split("|")[0]);
   }
 
-  // Kiểm tra trùng username
   if (users.includes(username.trim())) {
     return res.render("register", { error: "⚠️ Tên đăng nhập đã tồn tại!" });
   }
 
-  // Nếu không trùng thì lưu thêm
   const line = `${username.trim()}|${password.trim()}\n`;
   fs.appendFileSync(USERS_FILE, line);
 
   res.send(
-    "<script>alert('Đăng ký thành công!'); window.location.href='/'</script>"
+    "<script>alert('✅ Đăng ký thành công!'); window.location.href='/'</script>"
   );
 });
 
@@ -101,9 +100,8 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ====== ESP API (không cần login) ======
-
-// 1. ESP update dữ liệu
+// ====== ESP API ======
+// ESP gửi dữ liệu cập nhật
 app.get("/api/esp/update", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   const temp = parseFloat(req.query.temp);
@@ -123,7 +121,7 @@ app.get("/api/esp/update", (req, res) => {
   }
 });
 
-// 2. ESP lấy config
+// ESP lấy config
 app.get("/api/esp/get", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   const target = fs.existsSync(TARGET_FILE)
@@ -138,7 +136,7 @@ app.get("/api/esp/get", (req, res) => {
   res.send(`TARGET:${target}\nMIN:${min}\nMAX:${max}`);
 });
 
-// 3. ESP kiểm tra feed
+// ESP kiểm tra feed
 app.get("/api/esp/feedcheck", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   const feed = fs.existsSync(FEED_FILE)
@@ -147,11 +145,10 @@ app.get("/api/esp/feedcheck", (req, res) => {
   res.send(feed);
 });
 
-// ====== Dashboard web (cần login) ======
+// ===== DASHBOARD =====
 app.get("/dashboard.php", (req, res) => {
   if (!req.session.user) return res.redirect("/");
 
-  // lấy dữ liệu history
   let data = [];
   if (fs.existsSync(DATA_FILE)) {
     const rows = fs
@@ -164,7 +161,6 @@ app.get("/dashboard.php", (req, res) => {
     });
   }
 
-  // popup last status
   let popup = "";
   if (fs.existsSync(LAST_STATUS)) {
     const lines = fs
@@ -215,7 +211,7 @@ app.get("/dashboard.php", (req, res) => {
   });
 });
 
-// ===== POST update config =====
+// POST update config
 app.post("/dashboard.php", (req, res) => {
   if (!req.session.user) return res.redirect("/");
 
@@ -252,6 +248,6 @@ app.post("/dashboard.php", (req, res) => {
   res.redirect("/dashboard.php");
 });
 
-// ====== PORT ======
+// ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server chạy ở cổng ${PORT}`));
