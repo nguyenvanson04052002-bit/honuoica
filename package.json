@@ -1,16 +1,18 @@
 {
-  "name": "aes-proxy-server",
+  "name": "esp8266-proxy",
   "version": "1.0.0",
-  "description": "Proxy server to decrypt AES data for ESP8266",
+  "description": "Proxy server cho ESP8266 để lấy và gửi dữ liệu từ/đến server PHP",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^0.24.0",
-    "body-parser": "^1.19.0",
-    "crypto": "^1.0.1",
-    "express": "^4.17.1"
+    "axios": "^1.2.0",
+    "express": "^4.18.1",
+    "body-parser": "^1.20.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "author": "",
   "license": "ISC"
