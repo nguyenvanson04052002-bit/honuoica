@@ -89,6 +89,8 @@ app.post("/register", (req, res) => {
   res.send(
     "<script>alert('Đăng ký thành công!'); window.location.href='/'</script>"
   );
+  app.get("/register", (req, res) => {
+  res.render("register", { error: null });
 });
 
 
