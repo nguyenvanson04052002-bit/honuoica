@@ -1,93 +1,57 @@
 const express = require('express');
 const axios = require('axios');
-const bodyParser = require('body-parser');
-
-// Khởi tạo ứng dụng Express
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware để xử lý JSON và URL encoded
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Route gốc (dùng để kiểm tra nếu proxy đang hoạt động)
+app.get('/', (req, res) => {
+  res.send('Proxy Server is running!');
+});
 
-// Địa chỉ URL của website PHP
-const phpUrl = 'https://nuoicatudong.gt.tc/dashboard.php'; // Thay thế với URL thật của bạn
-
-// ===== 1. Lấy cấu hình nhiệt độ =====
+// Route để lấy thông tin cấu hình từ server PHP
 app.get('/get-config', async (req, res) => {
+  try {
+    // Thực hiện yêu cầu tới server PHP của bạn
+    const response = await axios.get('http://nuoicatudong.gt.tc/dashboard.php?mode=get');
+    
+    // Trả lại dữ liệu từ server PHP
+    res.send(response.data); 
+  } catch (error) {
+    console.error('Error fetching data from PHP server:', error);
+    res.status(500).send('Error fetching data from PHP server');
+  }
+});
+
+// Route để nhận dữ liệu từ ESP8266 và cập nhật vào server PHP
+app.get('/update', async (req, res) => {
+  const { temp, status } = req.query;
+
+  // Kiểm tra nếu có các giá trị cần thiết
+  if (temp && status) {
     try {
-        const response = await axios.get(`${phpUrl}?mode=get`);
-        const data = response.data;
-
-        // Phân tích và trả về dữ liệu cho ESP8266
-        const config = {
-            target: data.match(/TARGET:(\S+)/)[1],
-            min: data.match(/MIN:(\S+)/)[1],
-            max: data.match(/MAX:(\S+)/)[1],
-            time: data.match(/TIME:(\S+)/)[1],
-        };
-
-        res.json(config);
+      // Gửi dữ liệu cập nhật đến server PHP của bạn
+      const response = await axios.get(`http://nuoicatudong.gt.tc/dashboard.php?mode=update&temp=${temp}&status=${status}`);
+      res.send('Data updated successfully');
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data from PHP server' });
+      console.error('Error updating data on PHP server:', error);
+      res.status(500).send('Error updating data');
     }
+  } else {
+    res.status(400).send('Invalid parameters: temp and status are required');
+  }
 });
 
-// ===== 2. Cập nhật dữ liệu nhiệt độ =====
-app.get('/update-temperature', async (req, res) => {
-    const { temp, status } = req.query;
-
-    if (temp && !isNaN(temp) && status) {
-        try {
-            // Gửi yêu cầu đến PHP server để cập nhật dữ liệu
-            const response = await axios.get(`${phpUrl}?mode=update&temp=${temp}&status=${status}`);
-            if (response.data === 'OK') {
-                res.json({ success: true });
-            } else {
-                res.status(400).json({ error: 'Failed to update data on PHP server' });
-            }
-        } catch (error) {
-            res.status(500).json({ error: 'Failed to update data on PHP server' });
-        }
-    } else {
-        res.status(400).json({ error: 'Invalid parameters' });
-    }
-});
-
-// ===== 3. Lấy lịch cho ăn =====
+// Route để lấy lịch cho ăn từ server PHP
 app.get('/get-feed-schedule', async (req, res) => {
-    try {
-        const response = await axios.get(`${phpUrl}?mode=feedcheck`);
-        const feedSchedule = response.data;
-
-        res.json({ feedSchedule });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch feed schedule from PHP server' });
-    }
+  try {
+    const response = await axios.get('http://nuoicatudong.gt.tc/dashboard.php?mode=feedcheck');
+    res.send(response.data);
+  } catch (error) {
+    res.status(500).send('Error fetching feed schedule');
+  }
 });
 
-// ===== 4. Lưu cấu hình (dành cho yêu cầu POST từ ESP8266) =====
-app.post('/save-config', async (req, res) => {
-    const { targetTemp, minTemp, maxTemp, feedTime } = req.body;
-
-    try {
-        // Lưu cấu hình nhiệt độ vào PHP server
-        const configResponse = await axios.post(`${phpUrl}`, {
-            targetTemp,
-            minTemp,
-            maxTemp
-        });
-
-        // Lưu lịch cho ăn nếu có
-        const feedResponse = await axios.post(`${phpUrl}`, { feedTime });
-
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to save configuration to PHP server' });
-    }
-});
-
-// Khởi chạy server trên cổng 3000
+// Lắng nghe trên cổng
 app.listen(port, () => {
-    console.log(`Proxy server đang chạy tại http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
