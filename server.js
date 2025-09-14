@@ -21,10 +21,15 @@ app.get('/', (req, res) => {
 
 // Hàm giải mã AES
 function decryptAES(ciphertext, key, iv) {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
-        iv: CryptoJS.enc.Hex.parse(iv)
-    });
-    return bytes.toString(CryptoJS.enc.Utf8);
+    try {
+        const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
+            iv: CryptoJS.enc.Hex.parse(iv)
+        });
+        return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+        console.error('Error decrypting AES:', error);
+        return '';
+    }
 }
 
 // API Proxy
@@ -65,6 +70,14 @@ app.get('/proxy', async (req, res) => {
 
         // Giải mã dữ liệu
         decryptedData = decryptAES(encryptedData, key, iv);
+
+        // Nếu giải mã thành công mà không có lỗi, trả lại dữ liệu đã giải mã
+        if (!decryptedData) {
+            return res.status(500).json({ error: 'Failed to decrypt data' });
+        }
+    } else {
+        // Nếu không có dữ liệu mã hóa, trả về HTML gốc
+        decryptedData = html;
     }
 
     // Cập nhật trạng thái theo dõi
@@ -74,7 +87,11 @@ app.get('/proxy', async (req, res) => {
     averageResponseTime = totalResponseTime / requestCount;
 
     // Trả dữ liệu về dưới dạng JSON (có thể chứa thông tin đã giải mã)
-    res.json({ data: decryptedData || html });
+    res.json({ 
+        success: true, 
+        data: decryptedData || html, 
+        responseTime: responseTime 
+    });
 
   } catch (error) {
     // Cập nhật số lỗi nếu có
@@ -100,3 +117,4 @@ app.get('/status', (req, res) => {
 app.listen(port, () => {
   console.log(`Server đang chạy tại http://localhost:${port}`);
 });
+
