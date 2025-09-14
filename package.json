@@ -1,35 +1,14 @@
 {
-  "name": "honuoica-proxy",
+  "name": "esp8266-proxy",
   "version": "1.0.0",
-  "description": "Proxy server for scraping data and serving to ESP8266",
+  "description": "Proxy cho ESP8266 gửi dữ liệu tới InfinityFree",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "cheerio": "^1.0.0-rc.5",
-    "cors": "^2.8.5",
-    "express": "^4.17.1"
-  },
-  "engines": {
-    "node": "14.x"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nguyenvanson04052002-bit/honuoica.git"
-  },
-  "keywords": [
-    "proxy",
-    "express",
-    "axios",
-    "cheerio"
-  ],
-  "author": "Nguyen Van Son",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/nguyenvanson04052002-bit/honuoica/issues"
-  },
-  "homepage": "https://github.com/nguyenvanson04052002-bit/honuoica#readme"
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2"
+  }
 }
