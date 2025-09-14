@@ -32,6 +32,17 @@ const FEED_FILE = "feed_schedule.txt";
 
 const validStatuses = ["COOL_ON", "HEAT_ON", "OFF"];
 
+// ===== HÀM LẤY GIỜ VIỆT NAM =====
+function getVietnamTime() {
+  const now = new Date().toLocaleString("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour12: false,
+  });
+  const [date, time] = now.split(", ");
+  const [d, m, y] = date.split("/");
+  return `${y}-${m}-${d} ${time}`;
+}
+
 // ===== LOGIN =====
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard.php");
@@ -106,7 +117,7 @@ app.get("/api/esp/update", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   const temp = parseFloat(req.query.temp);
   const status = req.query.status ? req.query.status.trim() : "UNKNOWN";
-  const time = new Date().toISOString().replace("T", " ").split(".")[0];
+  const time = getVietnamTime();
 
   if (!validStatuses.includes(status)) {
     return res.status(400).send("ERROR: Invalid status");
@@ -143,6 +154,45 @@ app.get("/api/esp/feedcheck", (req, res) => {
     ? fs.readFileSync(FEED_FILE, "utf8").trim()
     : "";
   res.send(feed);
+});
+
+// ===== API cho dashboard realtime =====
+// Trả về dữ liệu mới nhất (20 dòng cuối) để vẽ biểu đồ
+app.get("/api/data/latest", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  if (!fs.existsSync(DATA_FILE)) return res.json([]);
+
+  const rows = fs
+    .readFileSync(DATA_FILE, "utf8")
+    .split("\n")
+    .filter(Boolean);
+
+  const last20 = rows.slice(-20).map((r) => {
+    const [time, temp, status] = r.split(",");
+    return { time, temp: parseFloat(temp), status };
+  });
+
+  res.json(last20);
+});
+
+// Trả về status mới nhất (cho popup)
+app.get("/api/status/latest", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+
+  if (!fs.existsSync(LAST_STATUS))
+    return res.json({ status: "N/A", time: "" });
+
+  const lines = fs
+    .readFileSync(LAST_STATUS, "utf8")
+    .split("\n")
+    .filter(Boolean);
+
+  if (lines.length === 0) return res.json({ status: "N/A", time: "" });
+
+  const lastLine = lines[lines.length - 1];
+  const [status, time] = lastLine.split("|");
+
+  res.json({ status, time });
 });
 
 // ===== DASHBOARD =====
@@ -228,7 +278,7 @@ app.post("/dashboard.php", (req, res) => {
       );
     }
 
-    const time = new Date().toISOString().replace("T", " ").split(".")[0];
+    const time = getVietnamTime();
     fs.writeFileSync(TARGET_FILE, t.toString());
     fs.writeFileSync(MIN_FILE, min.toString());
     fs.writeFileSync(MAX_FILE, max.toString());
