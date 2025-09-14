@@ -25,10 +25,18 @@ function decryptAES(ciphertext, key, iv) {
         const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
             iv: CryptoJS.enc.Hex.parse(iv)
         });
-        return bytes.toString(CryptoJS.enc.Utf8);
+
+        const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+        if (!decryptedText) {
+            console.error('Dữ liệu giải mã là rỗng');
+            return 'Giải mã dữ liệu không thành công';
+        }
+
+        return decryptedText;
     } catch (error) {
         console.error('Lỗi khi giải mã AES:', error);
-        return '';
+        return 'Giải mã dữ liệu không thành công';
     }
 }
 
@@ -65,6 +73,8 @@ app.get('/proxy', async (req, res) => {
     let decryptedData = '';
     if (match) {
         const encryptedData = match[1]; // Dữ liệu mã hóa AES
+        console.log('Encrypted Data:', encryptedData);
+        
         const key = "f655ba9d09a112d4968c63579db590b4"; // Khóa giải mã
         const iv = "98344c2eee86c3994890592585b49f80"; // IV giải mã
 
@@ -72,7 +82,7 @@ app.get('/proxy', async (req, res) => {
         decryptedData = decryptAES(encryptedData, key, iv);
 
         // Nếu giải mã thành công mà không có lỗi, trả lại dữ liệu đã giải mã
-        if (!decryptedData) {
+        if (decryptedData === 'Giải mã dữ liệu không thành công') {
             return res.status(500).json({ error: 'Giải mã dữ liệu không thành công' });
         }
     } else {
