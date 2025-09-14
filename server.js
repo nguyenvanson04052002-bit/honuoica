@@ -1,59 +1,80 @@
+// Import các thư viện
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Cổng mà server sẽ chạy
 
-// Để giải mã AES, bạn cần một thư viện như CryptoJS hoặc Node's built-in crypto module.
-// Giải mã AES (giả sử bạn đã có khóa và dữ liệu cần giải mã).
-const CryptoJS = require("crypto-js");
+// Biến để theo dõi trạng thái
+let requestCount = 0;  // Tổng số yêu cầu đã nhận
+let errorCount = 0;    // Tổng số lỗi đã xảy ra
+let totalResponseTime = 0;  // Tổng thời gian phản hồi (ms)
+let averageResponseTime = 0;  // Thời gian phản hồi trung bình
 
-// Hàm giải mã AES (Cần xác định khóa và IV chính xác)
-function decryptAES(ciphertext, key, iv) {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
-        iv: CryptoJS.enc.Hex.parse(iv)
-    });
-    return bytes.toString(CryptoJS.enc.Utf8);
-}
+// Middleware để parse URL-encoded data
+app.use(express.urlencoded({ extended: true }));
 
-// API Proxy: Cách lấy dữ liệu từ nguồn gốc
+// Route gốc "/" để tránh lỗi "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('Server đang chạy. Vui lòng sử dụng các API khác như /proxy hoặc /status');
+});
+
+// API Proxy
 app.get('/proxy', async (req, res) => {
+  const startTime = Date.now(); // Lưu thời gian bắt đầu
+
+  try {
+    // Lấy URL từ tham số "url" trong query string
     const targetUrl = req.query.url;
+
+    // Kiểm tra nếu không có URL, trả lỗi
     if (!targetUrl) {
-        return res.status(400).json({ error: 'Missing url parameter' });
+      return res.status(400).json({ error: 'Missing URL parameter' });
     }
 
-    try {
-        // Gửi yêu cầu đến URL gốc
-        const response = await axios.get(targetUrl);
-        
-        // Lọc dữ liệu và xử lý JavaScript nếu có
-        const html = response.data;
+    // Đảm bảo rằng URL cần proxy là URL của server chính
+    const serverUrl = 'https://nuoicatudong.gt.tc/dashboard.php'; 
 
-        // Tìm phần dữ liệu AES mã hóa trong HTML
-        const match = html.match(/toHex\(slowAES\.decrypt\(([^)]+)\)\)/);
-        
-        if (match) {
-            const encryptedData = match[1]; // Dữ liệu mã hóa AES
-            const key = "f655ba9d09a112d4968c63579db590b4"; // Khóa giải mã
-            const iv = "98344c2eee86c3994890592585b49f80"; // IV giải mã
-
-            // Giải mã dữ liệu
-            const decryptedData = decryptAES(encryptedData, key, iv);
-
-            // Trả về dữ liệu giải mã dưới dạng JSON cho ESP8266
-            res.json({ data: decryptedData });
-        } else {
-            // Nếu không tìm thấy AES mã hóa trong HTML
-            res.status(400).json({ error: 'Could not find encrypted data' });
-        }
-    } catch (error) {
-        console.error('Error during proxy request:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+    // Kiểm tra nếu URL không phải từ server chính, trả lỗi
+    if (!targetUrl.startsWith(serverUrl)) {
+      return res.status(400).json({ error: 'Invalid target URL' });
     }
+
+    // Thực hiện yêu cầu HTTP đến server chính
+    const response = await axios.get(targetUrl);
+
+    // Xử lý dữ liệu server trả về (giả sử trả về HTML)
+    const html = response.data;
+
+    // Cập nhật trạng thái theo dõi
+    const responseTime = Date.now() - startTime;
+    requestCount++;
+    totalResponseTime += responseTime;
+    averageResponseTime = totalResponseTime / requestCount;
+
+    // Trả dữ liệu về dưới dạng JSON
+    res.json({ data: html });
+
+  } catch (error) {
+    // Cập nhật số lỗi nếu có
+    errorCount++;
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch data from the main server' });
+  }
 });
 
-// Khởi động server
+// Endpoint hiển thị trạng thái proxy
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'OK',
+    requestCount,              // Tổng số yêu cầu
+    errorCount,                // Tổng số lỗi
+    averageResponseTime,       // Thời gian phản hồi trung bình
+    lastRequestTimestamp: new Date(),
+    uptime: process.uptime()   // Thời gian server đã hoạt động
+  });
+});
+
+// Khởi chạy server
 app.listen(port, () => {
-    console.log(`Proxy server is running on http://localhost:${port}`);
+  console.log(`Server đang chạy tại http://localhost:${port}`);
 });
-
