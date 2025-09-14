@@ -1,13 +1,15 @@
 {
-  "name": "esp-proxy",
+  "name": "my-nodejs-project",
   "version": "1.0.0",
-  "description": "Proxy server for ESP8266 to communicate with nuoicatudong.gt.tc",
-  "main": "index.js",
+  "description": "Node.js Proxy API Server",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^1.6.7",
-    "express": "^4.18.2"
-  }
+    "express": "^4.17.1",
+    "axios": "^0.21.1"
+  },
+  "author": "",
+  "license": "ISC"
 }
