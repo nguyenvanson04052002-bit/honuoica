@@ -31,7 +31,15 @@ app.get('/proxy', async (req, res) => {
       return res.status(400).json({ error: 'Missing URL parameter' });
     }
 
-    // Thực hiện yêu cầu HTTP đến server gốc
+    // Đảm bảo rằng URL cần proxy là URL của server chính
+    const serverUrl = 'https://nuoicatudong.gt.tc/dashboard.php'; 
+
+    // Kiểm tra nếu URL không phải từ server chính, trả lỗi
+    if (!targetUrl.startsWith(serverUrl)) {
+      return res.status(400).json({ error: 'Invalid target URL' });
+    }
+
+    // Thực hiện yêu cầu HTTP đến server chính
     const response = await axios.get(targetUrl);
 
     // Xử lý dữ liệu server trả về (giả sử trả về HTML)
@@ -50,7 +58,7 @@ app.get('/proxy', async (req, res) => {
     // Cập nhật số lỗi nếu có
     errorCount++;
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch data' });
+    res.status(500).json({ error: 'Failed to fetch data from the main server' });
   }
 });
 
@@ -64,6 +72,11 @@ app.get('/status', (req, res) => {
     lastRequestTimestamp: new Date(),
     uptime: process.uptime()   // Thời gian server đã hoạt động
   });
+});
+
+// Khởi chạy server
+app.listen(port, () => {
+  console.log(`Server đang chạy tại http://localhost:${port}`);
 });
 
 // Khởi chạy server
