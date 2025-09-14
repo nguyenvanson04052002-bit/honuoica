@@ -8,10 +8,16 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // Proxy endpoint để nhận yêu cầu từ ESP8266
-app.get('/api/proxy', async (req, res) => {
+app.get('/proxy', async (req, res) => {
   try {
-    // Lấy dữ liệu từ server gốc
-    const response = await axios.get('http://nuoicatudong.gt.tc/dashboard.php?mode=get');
+    // Lấy URL từ tham số "url" trong query string
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'Thiếu tham số URL' });
+    }
+
+    // Thực hiện yêu cầu HTTP đến server gốc
+    const response = await axios.get(https://nuoicatudong.gt.tc/dashboard.php?mode=get);
     
     // Kiểm tra dữ liệu trả về từ server gốc
     if (!response.data) {
