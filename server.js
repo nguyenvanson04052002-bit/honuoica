@@ -13,6 +13,11 @@ let averageResponseTime = 0;  // Thời gian phản hồi trung bình
 // Middleware để parse URL-encoded data
 app.use(express.urlencoded({ extended: true }));
 
+// Route gốc "/" để tránh lỗi "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('Server đang chạy. Vui lòng sử dụng các API khác như /proxy hoặc /status');
+});
+
 // API Proxy
 app.get('/proxy', async (req, res) => {
   const startTime = Date.now(); // Lưu thời gian bắt đầu
