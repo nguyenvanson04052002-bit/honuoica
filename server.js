@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Địa chỉ URL của website PHP
-const phpUrl = 'http://your-php-server-url.com'; // Thay thế với URL thật của bạn
+const phpUrl = 'https://nuoicatudong.gt.tc/dashboard.php'; // Thay thế với URL thật của bạn
 
 // ===== 1. Lấy cấu hình nhiệt độ =====
 app.get('/get-config', async (req, res) => {
