@@ -1,16 +1,29 @@
 {
-  "name": "proxy-server",
+  "name": "honuoica-proxy",
   "version": "1.0.0",
-  "description": "Proxy server to interact with PHP server",
+  "description": "A simple proxy server to fetch data from a web server with JavaScript (for ESP8266)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
     "express": "^4.17.1"
   },
   "engines": {
     "node": "16.x"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/honuica-proxy.git"
+  },
+  "keywords": [
+    "proxy",
+    "node.js",
+    "esp8266",
+    "web scraping"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }
