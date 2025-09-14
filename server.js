@@ -1,6 +1,7 @@
 // Import các thư viện
 const express = require('express');
 const axios = require('axios');
+const CryptoJS = require('crypto-js'); // Thư viện giải mã AES
 const app = express();
 const port = process.env.PORT || 3000; // Cổng mà server sẽ chạy
 
@@ -17,6 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.send('Server đang chạy. Vui lòng sử dụng các API khác như /proxy hoặc /status');
 });
+
+// Hàm giải mã AES
+function decryptAES(ciphertext, key, iv) {
+    const bytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
+        iv: CryptoJS.enc.Hex.parse(iv)
+    });
+    return bytes.toString(CryptoJS.enc.Utf8);
+}
 
 // API Proxy
 app.get('/proxy', async (req, res) => {
@@ -42,8 +51,21 @@ app.get('/proxy', async (req, res) => {
     // Thực hiện yêu cầu HTTP đến server chính
     const response = await axios.get(targetUrl);
 
-    // Xử lý dữ liệu server trả về (giả sử trả về HTML)
+    // Lọc và xử lý dữ liệu trả về (giả sử trả về HTML có chứa mã JavaScript)
     const html = response.data;
+
+    // Kiểm tra và giải mã dữ liệu AES trong HTML
+    const match = html.match(/toHex\(slowAES\.decrypt\(([^)]+)\)\)/);
+
+    let decryptedData = '';
+    if (match) {
+        const encryptedData = match[1]; // Dữ liệu mã hóa AES
+        const key = "f655ba9d09a112d4968c63579db590b4"; // Khóa giải mã
+        const iv = "98344c2eee86c3994890592585b49f80"; // IV giải mã
+
+        // Giải mã dữ liệu
+        decryptedData = decryptAES(encryptedData, key, iv);
+    }
 
     // Cập nhật trạng thái theo dõi
     const responseTime = Date.now() - startTime;
@@ -51,8 +73,8 @@ app.get('/proxy', async (req, res) => {
     totalResponseTime += responseTime;
     averageResponseTime = totalResponseTime / requestCount;
 
-    // Trả dữ liệu về dưới dạng JSON
-    res.json({ data: html });
+    // Trả dữ liệu về dưới dạng JSON (có thể chứa thông tin đã giải mã)
+    res.json({ data: decryptedData || html });
 
   } catch (error) {
     // Cập nhật số lỗi nếu có
