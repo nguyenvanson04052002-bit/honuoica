@@ -60,23 +60,37 @@ app.post("/login", (req, res) => {
   }
 });
 
-// ===== REGISTER PAGE =====
-app.get("/register", (req, res) => {
-  res.render("register", { error: null });
-});
-
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
+
   if (!username || !password) {
     return res.render("register", { error: "Vui lòng nhập đủ thông tin!" });
   }
 
+  // Đọc danh sách user hiện có
+  let users = [];
+  if (fs.existsSync(USERS_FILE)) {
+    users = fs
+      .readFileSync(USERS_FILE, "utf8")
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => line.split("|")[0]); // chỉ lấy username
+  }
+
+  // Kiểm tra trùng username
+  if (users.includes(username.trim())) {
+    return res.render("register", { error: "⚠️ Tên đăng nhập đã tồn tại!" });
+  }
+
+  // Nếu không trùng thì lưu thêm
   const line = `${username.trim()}|${password.trim()}\n`;
   fs.appendFileSync(USERS_FILE, line);
+
   res.send(
     "<script>alert('Đăng ký thành công!'); window.location.href='/'</script>"
   );
 });
+
 
 // ===== LOGOUT =====
 app.get("/logout", (req, res) => {
