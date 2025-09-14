@@ -1,27 +1,16 @@
 {
-  "name": "proxy-server",
+  "name": "my-nodejs-project",
   "version": "1.0.0",
-  "description": "Proxy server with AES decryption",
+  "description": "Node.js Proxy API Server",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js" // Ensure that Heroku/other platforms know how to start your app
+    "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^0.27.2",   // Ensure this version is up-to-date with the latest
-    "crypto-js": "^4.1.1", // AES decryption library
-    "express": "^4.17.3"   // Express.js for routing
+    "express": "^4.17.1",
+    "axios": "^0.21.1"
   },
-  "engines": {
-    "node": ">=14.x"  // Specify the minimum Node.js version you want to support
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/your-username/your-repo-name.git"  // Optional: Link to your repository
-  },
-  "author": "Your Name",  // Optional: Your name or your team's name
-  "license": "MIT",  // Optional: License type
-  "bugs": {
-    "url": "https://github.com/your-username/your-repo-name/issues"  // Optional: Issue tracking
-  },
-  "homepage": "https://github.com/your-username/your-repo-name#readme" // Optional: Link to the homepage
+  "author": "",
+  "license": "ISC"
 }
+
