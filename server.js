@@ -96,66 +96,62 @@ app.post("/register", (req, res) => {
   );
 });
 
-
 // ===== LOGOUT =====
 app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ===== ESP + DASHBOARD =====
-app.get("/dashboard.php", (req, res, next) => {
+// ====== ESP API (không cần login) ======
+
+// 1. ESP update dữ liệu
+app.get("/api/esp/update", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  const temp = parseFloat(req.query.temp);
+  const status = req.query.status ? req.query.status.trim() : "UNKNOWN";
+  const time = new Date().toISOString().replace("T", " ").split(".")[0];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).send("ERROR: Invalid status");
+  }
+
+  if (!isNaN(temp)) {
+    fs.appendFileSync(DATA_FILE, `${time},${temp},${status}\n`);
+    fs.appendFileSync(LAST_STATUS, `${status}|${time}\n`);
+    return res.send("OK\n");
+  } else {
+    return res.status(400).send("ERROR: Invalid temperature\n");
+  }
+});
+
+// 2. ESP lấy config
+app.get("/api/esp/get", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  const target = fs.existsSync(TARGET_FILE)
+    ? fs.readFileSync(TARGET_FILE, "utf8").trim()
+    : "25.0";
+  const min = fs.existsSync(MIN_FILE)
+    ? fs.readFileSync(MIN_FILE, "utf8").trim()
+    : "23.0";
+  const max = fs.existsSync(MAX_FILE)
+    ? fs.readFileSync(MAX_FILE, "utf8").trim()
+    : "27.0";
+  res.send(`TARGET:${target}\nMIN:${min}\nMAX:${max}`);
+});
+
+// 3. ESP kiểm tra feed
+app.get("/api/esp/feedcheck", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  const feed = fs.existsSync(FEED_FILE)
+    ? fs.readFileSync(FEED_FILE, "utf8").trim()
+    : "";
+  res.send(feed);
+});
+
+// ====== Dashboard web (cần login) ======
+app.get("/dashboard.php", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  const mode = req.query.mode;
 
-  // 1. ESP update
-  if (mode === "update") {
-    res.setHeader("Content-Type", "text/plain");
-    const temp = parseFloat(req.query.temp);
-    const status = req.query.status ? req.query.status.trim() : "UNKNOWN";
-    const time = new Date().toISOString().replace("T", " ").split(".")[0];
-
-    if (!validStatuses.includes(status)) {
-      res.status(400).send("ERROR: Invalid status");
-      return;
-    }
-
-    if (!isNaN(temp)) {
-      fs.appendFileSync(DATA_FILE, `${time},${temp},${status}\n`);
-      fs.appendFileSync(LAST_STATUS, `${status}|${time}\n`);
-      res.send("OK\n");
-    } else {
-      res.status(400).send("ERROR: Invalid temperature\n");
-    }
-    return;
-  }
-
-  // 2. ESP get config
-  if (mode === "get") {
-    res.setHeader("Content-Type", "text/plain");
-    const target = fs.existsSync(TARGET_FILE)
-      ? fs.readFileSync(TARGET_FILE, "utf8").trim()
-      : "25.0";
-    const min = fs.existsSync(MIN_FILE)
-      ? fs.readFileSync(MIN_FILE, "utf8").trim()
-      : "23.0";
-    const max = fs.existsSync(MAX_FILE)
-      ? fs.readFileSync(MAX_FILE, "utf8").trim()
-      : "27.0";
-    res.send(`TARGET:${target}\nMIN:${min}\nMAX:${max}`);
-    return;
-  }
-
-  // 3. ESP feedcheck
-  if (mode === "feedcheck") {
-    res.setHeader("Content-Type", "text/plain");
-    const feed = fs.existsSync(FEED_FILE)
-      ? fs.readFileSync(FEED_FILE, "utf8").trim()
-      : "";
-    res.send(feed);
-    return;
-  }
-
-  // 4. Dashboard web
+  // lấy dữ liệu history
   let data = [];
   if (fs.existsSync(DATA_FILE)) {
     const rows = fs
