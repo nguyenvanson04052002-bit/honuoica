@@ -78,9 +78,3 @@ app.get('/status', (req, res) => {
 app.listen(port, () => {
   console.log(`Server đang chạy tại http://localhost:${port}`);
 });
-
-// Khởi chạy server
-app.listen(port, () => {
-  console.log(`Server đang chạy tại http://localhost:${port}`);
-});
-
