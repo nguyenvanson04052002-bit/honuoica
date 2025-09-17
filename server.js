@@ -370,27 +370,39 @@ app.get("/view/feed", (req, res) => {
   res.render("view", { title: "🍽️ Giờ cho ăn", value: feed });
 });
 
+// ===== VIEW HISTORY TEMP =====
 app.get("/view/history/temp", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  let history = "Chưa có dữ liệu";
+
+  let rows = [];
   if (fs.existsSync(DATA_FILE)) {
-    const rows = fs.readFileSync(DATA_FILE, "utf8").split("\n").filter(Boolean).slice(-5);
-    history = rows.map(r => {
-      const [time, temp] = r.split(",");
-      return `${time}: ${temp} °C`;
-    }).join("<br>");
+    const allRows = fs.readFileSync(DATA_FILE, "utf8").split("\n").filter(Boolean);
+    rows = allRows.slice(-20).map(r => {
+      const [time, temp, status] = r.split(",");
+      return { time, temp, status };
+    });
   }
-  res.render("view", { title: "📜 Lịch sử nhiệt độ", value: history });
+
+  res.render("history_temp", {
+    title: "📜 Lịch sử nhiệt độ (20 bản ghi gần nhất)",
+    rows
+  });
 });
 
+// ===== VIEW HISTORY FEED =====
 app.get("/view/history/feed", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  let history = "Chưa có dữ liệu";
+
+  let feeds = [];
   if (fs.existsSync(FEED_FILE)) {
-    const feeds = fs.readFileSync(FEED_FILE, "utf8").trim().split(",");
-    history = feeds.join("<br>");
+    const raw = fs.readFileSync(FEED_FILE, "utf8").trim();
+    feeds = raw ? raw.split(",") : [];
   }
-  res.render("view", { title: "📜 Lịch sử giờ ăn", value: history });
+
+  res.render("history_feed", {
+    title: "📜 Lịch sử giờ cho ăn",
+    feeds
+  });
 });
 
 // ===== START SERVER =====
