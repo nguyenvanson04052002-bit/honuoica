@@ -18,28 +18,21 @@ th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
 <h2>📊 Biểu đồ nhiệt độ</h2>
 <canvas id="tempChart" height="180"></canvas>
 
+
 <h3>🎯 Điều chỉnh nhiệt độ</h3>
 <form method="POST" action="/dashboard.php">
-    <input type="number" step="0.1" name="targetTemp" value="<%= targetNow %>" required>
-    <input type="number" step="0.1" name="minTemp" value="<%= minNow %>" required>
-    <input type="number" step="0.1" name="maxTemp" value="<%= maxNow %>" required>
+    <label for="targetTemp">🌡️ Nhiệt độ mục tiêu (Target)</label>
+    <input type="number" step="0.1" id="targetTemp" name="targetTemp" value="<%= targetNow %>" required>
+
+    <label for="minTemp">⬇️ Nhiệt độ tối thiểu (Min)</label>
+    <input type="number" step="0.1" id="minTemp" name="minTemp" value="<%= minNow %>" required>
+
+    <label for="maxTemp">⬆️ Nhiệt độ tối đa (Max)</label>
+    <input type="number" step="0.1" id="maxTemp" name="maxTemp" value="<%= maxNow %>" required>
+
     <button type="submit">Cập nhật</button>
 </form>
 <p>Hiện tại: <b><%= minNow %>°C ~ <%= maxNow %>°C</b> | Mục tiêu: <b><%= targetNow %>°C</b></p>
-
-<h4>📜 Lịch sử thay đổi cấu hình</h4>
-<table>
-<tr><th>Thời gian</th><th>Target</th><th>Min</th><th>Max</th></tr>
-<% history.forEach(h => { %>
-<tr>
-  <td><%= h.time %></td>
-  <td><%= h.target %></td>
-  <td><%= h.min %></td>
-  <td><%= h.max %></td>
-</tr>
-<% }) %>
-</table>
-
 <h3>🕒 Lịch cho ăn</h3>
 <form method="POST" action="/dashboard.php">
     <input type="text" name="feedTime" placeholder="VD: 09:00,21:00" value="<%= feedNow %>" required>
@@ -48,11 +41,12 @@ th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
 
 <h3>📋 Lịch sử hoạt động</h3>
 <table id="activityTable">
-<tr><th>Thời gian</th><th>Nhiệt độ</th><th>Trạng thái</th></tr>
+<tr><th>Thời gian</th><th>Nhiệt độ</th><th>Target</th><th>Trạng thái</th></tr>
 <% data.slice().reverse().forEach(row => { %>
 <tr>
   <td><%= row.time %></td>
   <td><%= row.temp %></td>
+  <td><%= h.target %></td>
   <td><%= row.status %></td>
 </tr>
 <% }) %>
