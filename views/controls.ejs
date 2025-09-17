@@ -4,24 +4,78 @@
   <meta charset="UTF-8">
   <title>Controls</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+      background: #f9f9f9;
+    }
+    h2 { margin-bottom: 20px; }
     .btn {
       display: inline-block;
-      margin: 10px;
-      padding: 12px 18px;
+      margin: 8px;
+      padding: 12px 20px;
       font-size: 16px;
       background: #007bff;
       color: white;
       border: none;
       border-radius: 6px;
       text-decoration: none;
+      transition: 0.2s;
     }
     .btn:hover { background: #0056b3; }
+
+    /* Form đẹp hơn */
+    form {
+      margin-top: 25px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    form h3 { text-align: center; margin-bottom: 15px; }
+    .form-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+    }
+    .form-group label {
+      flex: 1;
+      font-weight: bold;
+    }
+    .form-group input {
+      flex: 2;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button[type="submit"] {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button[type="submit"]:hover {
+      background: #218838;
+    }
+    p { margin-top: 20px; }
   </style>
 </head>
 <body>
   <h2>⚙️ Trang điều khiển</h2>
 
+  <!-- Các nút xem thông tin -->
   <div>
     <a href="/view/max" class="btn">Hiển thị Nhiệt độ Max</a>
     <a href="/view/min" class="btn">Hiển thị Nhiệt độ Min</a>
@@ -31,19 +85,29 @@
     <a href="/view/history/feed" class="btn">Xem lịch sử giờ ăn</a>
   </div>
 
-  <h3>🔧 Chỉnh sửa cấu hình</h3>
+  <!-- Form chỉnh sửa -->
   <form method="POST" action="/controls">
-    <label>Nhiệt độ mục tiêu:</label>
-    <input type="number" step="0.1" name="targetTemp" value="<%= targetNow %>" required><br>
+    <h3>🔧 Chỉnh sửa cấu hình</h3>
+    
+    <div class="form-group">
+      <label>Nhiệt độ mục tiêu:</label>
+      <input type="number" step="0.1" name="targetTemp" value="<%= targetNow %>" required>
+    </div>
 
-    <label>Nhiệt độ Min:</label>
-    <input type="number" step="0.1" name="minTemp" value="<%= minNow %>" required><br>
+    <div class="form-group">
+      <label>Nhiệt độ Min:</label>
+      <input type="number" step="0.1" name="minTemp" value="<%= minNow %>" required>
+    </div>
 
-    <label>Nhiệt độ Max:</label>
-    <input type="number" step="0.1" name="maxTemp" value="<%= maxNow %>" required><br>
+    <div class="form-group">
+      <label>Nhiệt độ Max:</label>
+      <input type="number" step="0.1" name="maxTemp" value="<%= maxNow %>" required>
+    </div>
 
-    <label>Giờ cho ăn:</label>
-    <input type="text" name="feedTime" value="<%= feedNow %>" placeholder="09:00,21:00"><br>
+    <div class="form-group">
+      <label>Giờ cho ăn:</label>
+      <input type="text" name="feedTime" value="<%= feedNow %>" placeholder="09:00,21:00">
+    </div>
 
     <button type="submit">💾 Lưu thay đổi</button>
   </form>
