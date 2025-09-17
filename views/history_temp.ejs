@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #007bff; color: white; }
+  </style>
+</head>
+<body>
+  <h2><%= title %></h2>
+
+  <% if (rows.length === 0) { %>
+    <p>⚠️ Chưa có dữ liệu</p>
+  <% } else { %>
+    <table>
+      <tr>
+        <th>Thời gian</th>
+        <th>Nhiệt độ (°C)</th>
+        <th>Trạng thái</th>
+      </tr>
+      <% rows.forEach(r => { %>
+        <tr>
+          <td><%= r.time %></td>
+          <td><%= r.temp %></td>
+          <td><%= r.status %></td>
+        </tr>
+      <% }) %>
+    </table>
+  <% } %>
+
+  <p><a href="/controls">⬅️ Quay lại Trang điều khiển</a></p>
+</body>
+</html>
