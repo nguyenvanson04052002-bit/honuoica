@@ -338,6 +338,60 @@ app.post("/controls", (req, res) => {
 
   res.redirect("/controls");
 });
+// ===== VIEW ROUTES =====
+app.get("/view/max", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  const max = fs.existsSync(MAX_FILE) ? fs.readFileSync(MAX_FILE, "utf8").trim() : "27.0";
+  res.render("view", { title: "🌡️ Nhiệt độ Max", value: `${max} °C` });
+});
+
+app.get("/view/min", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  const min = fs.existsSync(MIN_FILE) ? fs.readFileSync(MIN_FILE, "utf8").trim() : "23.0";
+  res.render("view", { title: "🌡️ Nhiệt độ Min", value: `${min} °C` });
+});
+
+app.get("/view/current", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  let current = "--";
+  if (fs.existsSync(DATA_FILE)) {
+    const rows = fs.readFileSync(DATA_FILE, "utf8").split("\n").filter(Boolean);
+    if (rows.length > 0) {
+      const last = rows[rows.length - 1].split(",");
+      current = `${last[1]} °C`;
+    }
+  }
+  res.render("view", { title: "🌡️ Nhiệt độ hiện tại", value: current });
+});
+
+app.get("/view/feed", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  const feed = fs.existsSync(FEED_FILE) ? fs.readFileSync(FEED_FILE, "utf8").trim() : "Chưa cài";
+  res.render("view", { title: "🍽️ Giờ cho ăn", value: feed });
+});
+
+app.get("/view/history/temp", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  let history = "Chưa có dữ liệu";
+  if (fs.existsSync(DATA_FILE)) {
+    const rows = fs.readFileSync(DATA_FILE, "utf8").split("\n").filter(Boolean).slice(-5);
+    history = rows.map(r => {
+      const [time, temp] = r.split(",");
+      return `${time}: ${temp} °C`;
+    }).join("<br>");
+  }
+  res.render("view", { title: "📜 Lịch sử nhiệt độ", value: history });
+});
+
+app.get("/view/history/feed", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+  let history = "Chưa có dữ liệu";
+  if (fs.existsSync(FEED_FILE)) {
+    const feeds = fs.readFileSync(FEED_FILE, "utf8").trim().split(",");
+    history = feeds.join("<br>");
+  }
+  res.render("view", { title: "📜 Lịch sử giờ ăn", value: history });
+});
 
 // ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
