@@ -4,21 +4,60 @@
   <meta charset="UTF-8">
   <title><%= title %></title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-    h2 { margin-bottom: 20px; }
-    p, pre {
-      font-size: 18px;
-      background: #f1f1f1;
-      padding: 12px;
+    body {
+      font-family: Arial, sans-serif;
+      background: rgba(0,0,0,0.3);
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      animation: fadeIn 0.3s ease;
+    }
+    .card h2 {
+      margin-bottom: 15px;
+      font-size: 22px;
+      color: #333;
+    }
+    .card p {
+      font-size: 20px;
+      margin: 10px 0;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .close-btn {
+      margin-top: 20px;
+      padding: 10px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
       border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
       display: inline-block;
     }
-    a { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
+    .close-btn:hover { background: #b52a38; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
-  <h2><%= title %></h2>
-  <div><p><%- value %></p></div>
-  <a href="/controls">⬅️ Quay lại</a>
+  <div class="card">
+    <h2><%= title %></h2>
+    <p><%= value %></p>
+    <a href="/controls" class="close-btn">⬅️ Quay lại</a>
+  </div>
 </body>
 </html>
