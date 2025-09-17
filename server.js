@@ -147,12 +147,17 @@ app.get("/api/esp/get", (req, res) => {
   res.send(`TARGET:${target}\nMIN:${min}\nMAX:${max}`);
 });
 
-// ESP kiểm tra feed
+// ESP kiểm tra feed (lấy lần thay đổi gần nhất)
 app.get("/api/esp/feedcheck", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
-  const feed = fs.existsSync(FEED_FILE)
-    ? fs.readFileSync(FEED_FILE, "utf8").trim()
-    : "";
+
+  if (!fs.existsSync(FEED_FILE)) return res.send("");
+
+  const lines = fs.readFileSync(FEED_FILE, "utf8").split("\n").filter(Boolean);
+  if (lines.length === 0) return res.send("");
+
+  const lastLine = lines[lines.length - 1];
+  const [time, feed] = lastLine.split("|");
   res.send(feed);
 });
 
@@ -231,9 +236,14 @@ app.get("/dashboard.php", (req, res) => {
   const maxNow = fs.existsSync(MAX_FILE)
     ? fs.readFileSync(MAX_FILE, "utf8").trim()
     : "27.0";
-  const feedNow = fs.existsSync(FEED_FILE)
-    ? fs.readFileSync(FEED_FILE, "utf8").trim()
-    : "";
+  let feedNow = "";
+  if (fs.existsSync(FEED_FILE)) {
+    const lines = fs.readFileSync(FEED_FILE, "utf8").split("\n").filter(Boolean);
+    if (lines.length > 0) {
+      const lastLine = lines[lines.length - 1];
+      feedNow = lastLine.split("|")[1];
+    }
+  }
 
   res.render("dashboard", {
     data,
@@ -269,7 +279,7 @@ app.post("/dashboard.php", (req, res) => {
 
   if (feedTime) {
     if (/^(\d{2}:\d{2})(,\d{2}:\d{2})*$/.test(feedTime)) {
-      fs.writeFileSync(FEED_FILE, feedTime);
+      fs.appendFileSync(FEED_FILE, `${getVietnamTime()}|${feedTime}\n`);
     } else {
       return res.send(
         "<p style='color:red'>⚠️ Định dạng giờ không hợp lệ. VD: 09:00,21:00</p>"
@@ -293,9 +303,14 @@ app.get("/controls", (req, res) => {
   const maxNow = fs.existsSync(MAX_FILE)
     ? fs.readFileSync(MAX_FILE, "utf8").trim()
     : "27.0";
-  const feedNow = fs.existsSync(FEED_FILE)
-    ? fs.readFileSync(FEED_FILE, "utf8").trim()
-    : "";
+  let feedNow = "";
+  if (fs.existsSync(FEED_FILE)) {
+    const lines = fs.readFileSync(FEED_FILE, "utf8").split("\n").filter(Boolean);
+    if (lines.length > 0) {
+      const lastLine = lines[lines.length - 1];
+      feedNow = lastLine.split("|")[1];
+    }
+  }
 
   res.render("controls", {
     targetNow,
@@ -328,7 +343,7 @@ app.post("/controls", (req, res) => {
 
   if (feedTime) {
     if (/^(\d{2}:\d{2})(,\d{2}:\d{2})*$/.test(feedTime)) {
-      fs.writeFileSync(FEED_FILE, feedTime);
+      fs.appendFileSync(FEED_FILE, `${getVietnamTime()}|${feedTime}\n`);
     } else {
       return res.send(
         "<p style='color:red'>⚠️ Sai định dạng giờ. Ví dụ: 08:00,20:00</p>"
@@ -338,6 +353,7 @@ app.post("/controls", (req, res) => {
 
   res.redirect("/controls");
 });
+
 // ===== VIEW ROUTES =====
 app.get("/view/max", (req, res) => {
   if (!req.session.user) return res.redirect("/");
@@ -366,7 +382,14 @@ app.get("/view/current", (req, res) => {
 
 app.get("/view/feed", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  const feed = fs.existsSync(FEED_FILE) ? fs.readFileSync(FEED_FILE, "utf8").trim() : "Chưa cài";
+  let feed = "Chưa cài";
+  if (fs.existsSync(FEED_FILE)) {
+    const lines = fs.readFileSync(FEED_FILE, "utf8").split("\n").filter(Boolean);
+    if (lines.length > 0) {
+      const lastLine = lines[lines.length - 1];
+      feed = lastLine.split("|")[1];
+    }
+  }
   res.render("view", { title: "🍽️ Giờ cho ăn", value: feed });
 });
 
@@ -395,12 +418,15 @@ app.get("/view/history/feed", (req, res) => {
 
   let feeds = [];
   if (fs.existsSync(FEED_FILE)) {
-    const raw = fs.readFileSync(FEED_FILE, "utf8").trim();
-    feeds = raw ? raw.split(",") : [];
+    const lines = fs.readFileSync(FEED_FILE, "utf8").split("\n").filter(Boolean);
+    feeds = lines.slice(-20).map(line => {
+      const [time, feed] = line.split("|");
+      return { time, feed };
+    });
   }
 
   res.render("history_feed", {
-    title: "📜 Lịch sử giờ cho ăn",
+    title: "📜 Lịch sử giờ cho ăn (20 lần gần nhất)",
     feeds
   });
 });
