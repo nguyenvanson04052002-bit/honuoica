@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Controls</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+    .btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 18px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .btn:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h2>⚙️ Trang điều khiển</h2>
+
+  <div>
+    <a href="/view/max" class="btn">Hiển thị Nhiệt độ Max</a>
+    <a href="/view/min" class="btn">Hiển thị Nhiệt độ Min</a>
+    <a href="/view/current" class="btn">Hiển thị Nhiệt độ hiện tại</a>
+    <a href="/view/feed" class="btn">Hiển thị giờ cho ăn</a>
+    <a href="/view/history/temp" class="btn">Xem lịch sử nhiệt</a>
+    <a href="/view/history/feed" class="btn">Xem lịch sử giờ ăn</a>
+  </div>
+
+  <h3>🔧 Chỉnh sửa cấu hình</h3>
+  <form method="POST" action="/controls">
+    <label>Nhiệt độ mục tiêu:</label>
+    <input type="number" step="0.1" name="targetTemp" value="<%= targetNow %>" required><br>
+
+    <label>Nhiệt độ Min:</label>
+    <input type="number" step="0.1" name="minTemp" value="<%= minNow %>" required><br>
+
+    <label>Nhiệt độ Max:</label>
+    <input type="number" step="0.1" name="maxTemp" value="<%= maxNow %>" required><br>
+
+    <label>Giờ cho ăn:</label>
+    <input type="text" name="feedTime" value="<%= feedNow %>" placeholder="09:00,21:00"><br>
+
+    <button type="submit">💾 Lưu thay đổi</button>
+  </form>
+
+  <p><a href="/dashboard.php">⬅️ Quay lại Dashboard</a></p>
+</body>
+</html>
