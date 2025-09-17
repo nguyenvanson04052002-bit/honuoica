@@ -1,3 +1,4 @@
+// ====== IMPORT ======
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
@@ -14,7 +15,7 @@ app.set("views", path.join(__dirname, "views"));
 
 app.use(
   session({
-    secret: "supersecret", // đổi khi deploy
+    secret: "supersecret", // ⚠️ đổi khi deploy
     resave: false,
     saveUninitialized: true,
   })
@@ -244,7 +245,7 @@ app.get("/dashboard.php", (req, res) => {
   });
 });
 
-// POST update config
+// POST update config trong Dashboard
 app.post("/dashboard.php", (req, res) => {
   if (!req.session.user) return res.redirect("/");
 
@@ -277,6 +278,65 @@ app.post("/dashboard.php", (req, res) => {
   }
 
   res.redirect("/dashboard.php");
+});
+
+// ===== CONTROLS =====
+app.get("/controls", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+
+  const targetNow = fs.existsSync(TARGET_FILE)
+    ? fs.readFileSync(TARGET_FILE, "utf8").trim()
+    : "25.0";
+  const minNow = fs.existsSync(MIN_FILE)
+    ? fs.readFileSync(MIN_FILE, "utf8").trim()
+    : "23.0";
+  const maxNow = fs.existsSync(MAX_FILE)
+    ? fs.readFileSync(MAX_FILE, "utf8").trim()
+    : "27.0";
+  const feedNow = fs.existsSync(FEED_FILE)
+    ? fs.readFileSync(FEED_FILE, "utf8").trim()
+    : "";
+
+  res.render("controls", {
+    targetNow,
+    minNow,
+    maxNow,
+    feedNow,
+  });
+});
+
+app.post("/controls", (req, res) => {
+  if (!req.session.user) return res.redirect("/");
+
+  const { targetTemp, minTemp, maxTemp, feedTime } = req.body;
+
+  if (targetTemp && minTemp && maxTemp) {
+    const t = parseFloat(targetTemp);
+    const min = parseFloat(minTemp);
+    const max = parseFloat(maxTemp);
+
+    if (t < min || t > max) {
+      return res.send(
+        "<p style='color:red'>⚠️ Nhiệt độ mục tiêu phải nằm trong khoảng Min và Max.</p>"
+      );
+    }
+
+    fs.writeFileSync(TARGET_FILE, t.toString());
+    fs.writeFileSync(MIN_FILE, min.toString());
+    fs.writeFileSync(MAX_FILE, max.toString());
+  }
+
+  if (feedTime) {
+    if (/^(\d{2}:\d{2})(,\d{2}:\d{2})*$/.test(feedTime)) {
+      fs.writeFileSync(FEED_FILE, feedTime);
+    } else {
+      return res.send(
+        "<p style='color:red'>⚠️ Sai định dạng giờ. Ví dụ: 08:00,20:00</p>"
+      );
+    }
+  }
+
+  res.redirect("/controls");
 });
 
 // ===== START SERVER =====
