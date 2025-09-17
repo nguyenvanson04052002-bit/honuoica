@@ -23,7 +23,6 @@ app.use(
 // ====== FILES ======
 const USERS_FILE = "users.txt";
 const DATA_FILE = "data.csv";
-const CONFIG_HISTORY = "config_history.csv";
 const LAST_STATUS = "last_status.txt";
 const TARGET_FILE = "target.txt";
 const MIN_FILE = "min_temp.txt";
@@ -157,7 +156,6 @@ app.get("/api/esp/feedcheck", (req, res) => {
 });
 
 // ===== API cho dashboard realtime =====
-// Trả về dữ liệu mới nhất (20 dòng cuối) để vẽ biểu đồ
 app.get("/api/data/latest", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (!fs.existsSync(DATA_FILE)) return res.json([]);
@@ -175,7 +173,6 @@ app.get("/api/data/latest", (req, res) => {
   res.json(last20);
 });
 
-// Trả về status mới nhất (cho popup)
 app.get("/api/status/latest", (req, res) => {
   res.setHeader("Content-Type", "application/json");
 
@@ -237,19 +234,6 @@ app.get("/dashboard.php", (req, res) => {
     ? fs.readFileSync(FEED_FILE, "utf8").trim()
     : "";
 
-  let history = [];
-  if (fs.existsSync(CONFIG_HISTORY)) {
-    const lines = fs
-      .readFileSync(CONFIG_HISTORY, "utf8")
-      .split("\n")
-      .filter(Boolean)
-      .reverse();
-    history = lines.map((l) => {
-      const [time, target, min, max] = l.split(",");
-      return { time, target, min, max };
-    });
-  }
-
   res.render("dashboard", {
     data,
     popup,
@@ -257,7 +241,6 @@ app.get("/dashboard.php", (req, res) => {
     minNow,
     maxNow,
     feedNow,
-    history,
   });
 });
 
@@ -278,11 +261,9 @@ app.post("/dashboard.php", (req, res) => {
       );
     }
 
-    const time = getVietnamTime();
     fs.writeFileSync(TARGET_FILE, t.toString());
     fs.writeFileSync(MIN_FILE, min.toString());
     fs.writeFileSync(MAX_FILE, max.toString());
-    fs.appendFileSync(CONFIG_HISTORY, `${time},${t},${min},${max}\n`);
   }
 
   if (feedTime) {
